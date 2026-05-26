@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Congressional Debate Rankings</title>
+
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <style>
+    :root {
+      --navy: #152247;
+      --navy-2: #1e3272;
+      --blue: #1458d4;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --line: #dfe4ee;
+      --text: #09111f;
+      --muted: #5d687a;
+      --soft: #eef3ff;
+      --shadow: 0 14px 38px rgba(20, 34, 71, 0.10);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    a { color: inherit; }
+
+    .top-bar {
+      height: 20px;
+      background: linear-gradient(90deg, var(--navy), var(--navy-2));
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #172552 0%, #203a86 100%);
+      color: white;
+      padding: 54px 10vw 62px;
+      
+    }
+
+    .hero-inner {
+      width: 100%;
+      max-width: none;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.4fr 0.8fr;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: #cbd7ff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 6vw, 4.2rem);
+      line-height: 0.95;
+      letter-spacing: -0.055em;
+    }
+
+    .hero-copy {
+      max-width: 690px;
+      margin: 18px 0 0;
+      color: #e8edff;
+      font-size: 1.04rem;
+      line-height: 1.65;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .button {
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 999px;
+      padding: 11px 16px;
+      font-weight: 800;
+      font-size: 0.92rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .button:hover { transform: translateY(-1px); }
+
+    .button.primary {
+      background: white;
+      color: var(--navy);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+    }
+
+    .button.secondary {
+      color: white;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .donation-card {
+      background: rgba(255, 255, 255, 0.11);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: var(--radius);
+      padding: 22px;
+      backdrop-filter: blur(14px);
+    }
+
+    .donation-card h2 {
+      margin: 0 0 8px;
+      font-size: 1.08rem;
+    }
+
+    .donation-card p {
+      margin: 0 0 18px;
+      color: #dbe4ff;
+      line-height: 1.55;
+      font-size: 0.95rem;
+    }
+
+    main {
+      width: 100%;
+      max-width: none;
+      margin: 0 auto 70px;
+      padding: 3vw 10vw 0;
+    }
+
+    #rankings {
+      width: 100%;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .leaderboard-header {
+      padding: 22px;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: end;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .leaderboard-header h2 {
+      margin: 0;
+      font-size: 1.45rem;
+      letter-spacing: -0.03em;
+    }
+
+    .subtle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .search {
+      width: min(360px, 78vw);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 13px;
+      font: inherit;
+      outline: none;
+      background: #fff;
+    }
+
+    .search:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(20, 88, 212, 0.12);
+    }
+
+    .meta-pill {
+      border: 1px solid var(--line);
+      background: var(--soft);
+      border-radius: 999px;
+      padding: 10px 13px;
+      color: var(--navy);
+      font-size: 0.88rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 820px;
+    }
+
+    th {
+      text-align: center;
+      color: #1f2937;
+      background: #fafbfe;
+      font-size: 0.82rem;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      letter-spacing: 0.01em;
+    }
+
+    td {
+      text-align: center;
+      padding: 15px 14px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+      font-size: 0.94rem;
+    }
+
+    tbody tr:hover { background: #fbfdff; }
+
+    .rank {
+      width: 72px;
+      color: var(--blue);
+      font-weight: 900;
+      text-align: center;
+      font-size: 1.08rem;
+    }
+
+    .entry-name {
+      font-weight: 900;
+      letter-spacing: -0.012em;
+      font-size: 1.06rem;
+    }
+
+    .school {
+      color: var(--muted);
+    }
+
+    .number {
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .empty-state {
+      display: none;
+      padding: 34px 22px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .pagination {
+      padding: 18px 22px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      background: #fafbfe;
+    }
+
+    .page-info {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .page-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .page-button {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--navy);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .page-button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .methodology {
+      margin-top: 28px;
+      padding: 28px;
+    }
+
+    .methodology h2 {
+      margin: 0 0 10px;
+      font-size: 1.7rem;
+      letter-spacing: -0.035em;
+    }
+
+    .methodology h3 {
+      margin-top: 26px;
+      color: var(--navy);
+      letter-spacing: -0.02em;
+    }
+
+    .methodology p,
+    .methodology li {
+      color: #354052;
+      line-height: 1.65;
+    }
+
+    .math-box {
+      background: #f8faff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      overflow-x: auto;
+      margin: 14px 0;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 36px 20px 52px;
+    }
+
+    @media (max-width: 840px) {
+      .hero-inner { grid-template-columns: 1fr; }
+      .leaderboard-header { align-items: stretch; flex-direction: column; }
+      .controls { justify-content: flex-start; }
+      .pagination { flex-direction: column; align-items: stretch; }
+      .page-buttons { justify-content: space-between; }
+      .page-button { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar"></div>
+
+  <header class="hero">
+    <div class="hero-inner">
+      <section>
+        <p class="eyebrow">Congressional Debate Rankings</p>
+        <h1>TOC Circuit Leaderboard</h1>
+        <div class="hero-actions">
+          <a class="button primary" href="#rankings">View Rankings</a>
+          <a class="button secondary" href="#methodology">Methodology</a>
+        </div>
+      </section>
+
+      <aside class="donation-card">
+        <h2>Want to improve?</h2>
+        <p>
+          Try joining Equality in Forensics, a community built to help competitors get better through free coaching, resources, and support.
+        </p>
+        <a class="button primary" href="https://www.equalityinforensics.org/" target="_blank" rel="noopener">Click Here!</a>
+      </aside>
+    </div>
+  </header>
+
+  <main>
+    <section id="rankings" class="panel">
+      <div class="leaderboard-header">
+        <div>
+          <h2>Leaderboard</h2>
+          <p class="subtle">Sorted highest to lowest by exposure.</p>
+        </div>
+        <div class="controls">
+          <input id="searchInput" class="search" type="search" placeholder="Search name or school" autocomplete="off" />
+          <span id="totalCount" class="meta-pill">Loading…</span>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table aria-label="Congressional Debate Ranking Table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Entry</th>
+              <th>Institution</th>
+              <th>Exposure</th>
+              <th>μ</th>
+              <th>σ</th>
+              <th>Rounds</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody"></tbody>
+        </table>
+      </div>
+
+      <div id="emptyState" class="empty-state">No competitors match that search.</div>
+
+      <div class="pagination">
+        <span id="pageInfo" class="page-info">Showing 0 results</span>
+        <div class="page-buttons">
+          <button id="prevButton" class="page-button" type="button">Previous</button>
+          <button id="nextButton" class="page-button" type="button">Next 50</button>
+        </div>
+      </div>
+    </section>
+
+<section id="methodology" class="panel methodology">
+  <h2>Methodology</h2>
+
+  <h3>Normal-person version</h3>
+  <p>
+    Each competitor has a rating estimate and an uncertainty estimate.
+     The estimate, μ, represents the model’s current best guess of competitive strength. 
+     The uncertainty, σ, represents how unsure the model still is. 
+     A competitor with strong results and many rounds will have a higher μ and lower σ. The public ranking is sorted by exposure instead of raw μ, as exposure penalizes uncertainty. This controls entries who have few, but successful, rounds from ranking extremely high. 
+  </p>
+  <p>
+    On a similar note, competitors with less than 4 rounds are filtered out in order to prevent overreaction from tiny sample sizes (and to control for chamber noise due to parent judges if ykwim!!)
+  </p>
+
+<h3>Math-person version</h3>
+    <div class="math-box">
+    $$
+    R_i = \mathcal{N}(\mu_i, \sigma_i^2)
+    $$
+
+    $$
+    \text{Eligible}_i \iff \text{rounds}_i \ge 4
+    $$
+
+    $$
+    r_{i,t} < r_{j,t} \Rightarrow i \succ_t j
+    $$
+
+    $$
+    \mu_i', \sigma_i' =
+    \operatorname{TrueSkillUpdate}
+    \left(
+        R_i,
+        \succ_t,
+        \beta,
+        \tau
+    \right)
+    $$
+
+    $$
+    \text{Exposure}_i = \mu_i - k\sigma_i
+    $$
+
+    $$
+    L = \{i : \text{rounds}_i \ge 4\}
+    $$
+
+    $$
+    i \prec j
+    \iff
+    \text{Exposure}_i > \text{Exposure}_j,
+    \quad i,j \in L
+    $$
+
+    $$
+    \text{Rank}_i =
+    1 +
+    \left|
+        \{j \in L : \text{Exposure}_j > \text{Exposure}_i\}
+    \right|
+    $$
+    </div>
+
+    <h3>Variable definitions</h3>
+    <p>
+    \(i, j\): competitors.
+    \(t\): chamber being processed.
+    \(R_i\): competitor \(i\)'s rating distribution.
+    \(\mu_i\): estimated skill.
+    \(\sigma_i\): rating uncertainty.
+    \(r_{i,t}\): placement of competitor \(i\) in chamber \(t\).
+    \(\succ_t\): ordered result list for chamber \(t\).
+    \(\beta\): performance-variance parameter.
+    \(\tau\): rating-drift parameter.
+    \(k\): uncertainty penalty used for exposure.
+    \(L\): pool after eligibility filter.
+    </p>
+</section>
+  </main>
+<footer>
+  Built by Harrison Flint |
+  <a href="https://www.linkedin.com/in/harrisonflint/" target="_blank" rel="noopener">
+    LinkedIn
+  </a>
+</footer>
+  <script>
+    const CSV_PATH = "cleaned_ratings.csv";
+    const PAGE_SIZE = 50;
+
+    let allRows = [];
+    let filteredRows = [];
+    let currentPage = 1;
+
+    const body = document.getElementById("leaderboardBody");
+    const searchInput = document.getElementById("searchInput");
+    const totalCount = document.getElementById("totalCount");
+    const pageInfo = document.getElementById("pageInfo");
+    const prevButton = document.getElementById("prevButton");
+    const nextButton = document.getElementById("nextButton");
+    const emptyState = document.getElementById("emptyState");
+
+    function parseCSV(text) {
+      const rows = [];
+      let current = [];
+      let cell = "";
+      let insideQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"' && insideQuotes && next === '"') {
+          cell += '"';
+          i++;
+        } else if (char === '"') {
+          insideQuotes = !insideQuotes;
+        } else if (char === "," && !insideQuotes) {
+          current.push(cell);
+          cell = "";
+        } else if ((char === "\n" || char === "\r") && !insideQuotes) {
+          if (char === "\r" && next === "\n") i++;
+          current.push(cell);
+          if (current.some(value => value.trim() !== "")) rows.push(current);
+          current = [];
+          cell = "";
+        } else {
+          cell += char;
+        }
+      }
+
+      current.push(cell);
+      if (current.some(value => value.trim() !== "")) rows.push(current);
+
+      const headers = rows.shift().map(header => header.trim());
+      return rows.map(row => {
+        const obj = {};
+        headers.forEach((header, index) => {
+          obj[header] = (row[index] || "").trim();
+        });
+        return obj;
+      });
+    }
+
+    function numberValue(value) {
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function formatNumber(value) {
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed.toFixed(2) : "—";
+    }
+
+    function cleanText(value) {
+      return String(value ?? "").replace(/[&<>'"]/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#039;",
+        '"': "&quot;"
+      }[char]));
+    }
+
+    function prepareRows(rows) {
+      return rows
+        .filter(row => row.entry && row.school)
+        .map(row => ({
+          rank: row.rank,
+          entryKey: row.entry_key,
+          entry: row.entry,
+          school: row.school,
+          mu: row.mu,
+          sigma: row.sigma,
+          exposure: row.exposure,
+          rounds: row.rounds
+        }))
+        .sort((a, b) => numberValue(b.exposure) - numberValue(a.exposure))
+        .map((row, index) => ({
+          ...row,
+          rank: index + 1
+        }));
+    }
+
+    function applySearch() {
+      const query = searchInput.value.trim().toLowerCase();
+      currentPage = 1;
+
+      filteredRows = !query
+        ? [...allRows]
+        : allRows.filter(row =>
+            row.entry.toLowerCase().includes(query) ||
+            row.school.toLowerCase().includes(query)
+          );
+
+      render();
+    }
+
+    function render() {
+      const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+      currentPage = Math.min(currentPage, totalPages);
+
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const end = start + PAGE_SIZE;
+      const visibleRows = filteredRows.slice(start, end);
+
+      body.innerHTML = visibleRows.map(row => `
+        <tr>
+          <td class="rank">${cleanText(row.rank)}</td>
+          <td><span class="entry-name">${cleanText(row.entry)}</span></td>
+          <td class="school">${cleanText(row.school)}</td>
+          <td class="number">${formatNumber(row.exposure)}</td>
+          <td class="number">${formatNumber(row.mu)}</td>
+          <td class="number">${formatNumber(row.sigma)}</td>
+          <td class="number">${cleanText(row.rounds)}</td>
+        </tr>
+      `).join("");
+
+      emptyState.style.display = filteredRows.length === 0 ? "block" : "none";
+      totalCount.textContent = `${filteredRows.length.toLocaleString()} shown / ${allRows.length.toLocaleString()} total`;
+
+      if (filteredRows.length === 0) {
+        pageInfo.textContent = "Showing 0 results";
+      } else {
+        pageInfo.textContent = `Showing ${start + 1}-${Math.min(end, filteredRows.length)} of ${filteredRows.length.toLocaleString()} results`;
+      }
+
+      prevButton.disabled = currentPage <= 1;
+      nextButton.disabled = currentPage >= totalPages;
+    }
+
+    prevButton.addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage--;
+        render();
+        document.getElementById("rankings").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+
+    nextButton.addEventListener("click", () => {
+      const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+      if (currentPage < totalPages) {
+        currentPage++;
+        render();
+        document.getElementById("rankings").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+
+    searchInput.addEventListener("input", applySearch);
+
+    async function loadCSV() {
+      try {
+        const response = await fetch(CSV_PATH, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Could not load ${CSV_PATH}`);
+        const text = await response.text();
+        allRows = prepareRows(parseCSV(text));
+        filteredRows = [...allRows];
+        render();
+      } catch (error) {
+        console.error(error);
+        totalCount.textContent = "CSV not found";
+        emptyState.style.display = "block";
+        emptyState.textContent = `Could not load ${CSV_PATH}. Put ratings.csv beside index.html or update CSV_PATH in the script.`;
+        prevButton.disabled = true;
+        nextButton.disabled = true;
+      }
+    }
+
+    loadCSV();
+  </script>
+</body>
+</html>
