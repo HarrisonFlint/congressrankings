@@ -654,35 +654,39 @@
       nextButton.disabled = currentPage >= totalPages;
     }
 
-    prevButton.addEventListener("click", event => {
-      event.preventDefault();
-    
-      if (currentPage > 1) {
-        const oldScrollY = window.scrollY;
-        currentPage--;
-        render();
-    
-        requestAnimationFrame(() => {
-          window.scrollTo({ top: oldScrollY, behavior: "auto" });
-        });
-      }
-    });
-    
-    nextButton.addEventListener("click", event => {
-      event.preventDefault();
-    
-      const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
-    
-      if (currentPage < totalPages) {
-        const oldScrollY = window.scrollY;
-        currentPage++;
-        render();
-    
-        requestAnimationFrame(() => {
-          window.scrollTo({ top: oldScrollY, behavior: "auto" });
-        });
-      }
-    });
+      prevButton.addEventListener("click", event => {
+        event.preventDefault();
+      
+        if (currentPage > 1) {
+          const oldScrollY = window.scrollY;
+          currentPage--;
+          render();
+      
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              window.scrollTo({ top: oldScrollY, behavior: "auto" });
+            });
+          });
+        }
+      });
+      
+      nextButton.addEventListener("click", event => {
+        event.preventDefault();
+      
+        const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+      
+        if (currentPage < totalPages) {
+          const oldScrollY = window.scrollY;
+          currentPage++;
+          render();
+      
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              window.scrollTo({ top: oldScrollY, behavior: "auto" });
+            });
+          });
+        }
+      });
 
     searchInput.addEventListener("input", applySearch);
 
