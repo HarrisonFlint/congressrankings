@@ -652,7 +652,6 @@
       if (currentPage > 1) {
         currentPage--;
         render();
-        document.getElementById("rankings").scrollIntoView({ behavior: "smooth", block: "start" });
       }
     });
 
@@ -661,7 +660,6 @@
       if (currentPage < totalPages) {
         currentPage++;
         render();
-        document.getElementById("rankings").scrollIntoView({ behavior: "smooth", block: "start" });
       }
     });
 
